@@ -37,7 +37,7 @@ class ProductItem extends StatelessWidget {
             color: Theme.of(context).colorScheme.secondary,
             onPressed: () {
               cart.addItem(
-                productId: product.id,
+                productId: product.id!,
                 title: product.title,
                 price: product.price,
               );
@@ -49,7 +49,7 @@ class ProductItem extends StatelessWidget {
                   action: SnackBarAction(
                     label: 'Undo',
                     onPressed:() {
-                      cart.removeSingleItem(product.id);
+                      cart.removeSingleItem(product.id!);
                     },
                   ),
                 ),
