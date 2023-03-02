@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/products_grid.dart';
 import '../widgets/badge.dart';
 import '../models/cart.dart';
+import '../models/products.dart';
 import '../screens/cart_screen.dart';
 import '../widgets/app_drawer.dart';
 
@@ -19,6 +21,26 @@ class ProductOverviewScreen extends StatefulWidget {
 
 class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
   var _showFavorites = false;
+  var _initValues = false;
+
+  Future<void> _obtainFuture() {
+    return Provider.of<Products>(context, listen: false).fetchAndSetProducts();
+  }
+
+  @override
+  void initState() {
+    setState(() {
+      _initValues = true;
+    });
+    _obtainFuture().catchError((error) {
+      showSnackBar(context);
+    }).then((_) {
+      setState(() {
+        _initValues = false;
+      });
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,8 +87,27 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
           )
         ],
       ),
-      body: ProductsGrid(_showFavorites),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _obtainFuture().catchError((error) => showSnackBar(context));
+        },
+        child: _initValues
+            ? const Center(child: CircularProgressIndicator())
+            : ProductsGrid(_showFavorites),
+      ),
       drawer: AppDrawer(),
     );
   }
+}
+
+void showSnackBar(BuildContext context) {
+  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+        'Some error occurred. Try again later.',
+        textAlign: TextAlign.center,
+      ),
+    ),
+  );
 }

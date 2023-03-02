@@ -6,6 +6,17 @@ import '../models/product.dart';
 import '../models/cart.dart';
 
 class ProductItem extends StatelessWidget {
+  void showSnackBar(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Some error occurred!',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final product = Provider.of<Product>(context, listen: false);
@@ -23,7 +34,9 @@ class ProductItem extends StatelessWidget {
                 ),
                 color: Theme.of(context).colorScheme.secondary,
                 onPressed: () {
-                  prod.toggleFavoriteStatus();
+                  prod
+                      .toggleFavoriteStatus()
+                      .catchError((error) => showSnackBar(context));
                 },
               );
             },
@@ -48,7 +61,7 @@ class ProductItem extends StatelessWidget {
                   duration: const Duration(seconds: 2),
                   action: SnackBarAction(
                     label: 'Undo',
-                    onPressed:() {
+                    onPressed: () {
                       cart.removeSingleItem(product.id!);
                     },
                   ),

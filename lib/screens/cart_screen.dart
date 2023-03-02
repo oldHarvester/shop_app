@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../models/cart.dart' show Cart;
 import '../widgets/cart_item.dart';
 import '../models/orders.dart';
-import '../screens/orders_screen.dart';
 
 class CartScreen extends StatelessWidget {
   static const routeName = '/cart';
@@ -37,14 +36,9 @@ class CartScreen extends StatelessWidget {
                     ),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
-                  TextButton(
-                    child: const Text('ORDER NOW'),
-                    onPressed: () {
-                      orders.addOrder(cart.items.values.toList(), cart.totalAmount());
-                      cart.clear();
-                    },
-                  ),
-                  const SizedBox(height: 10),
+                  const SizedBox(width: 10),
+                  OrderButton(cart: cart, orders: orders),
+                  const SizedBox(width: 10),
                 ],
               ),
             ),
@@ -66,5 +60,66 @@ class CartScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  const OrderButton({
+    required this.cart,
+    required this.orders,
+  });
+
+  final Cart cart;
+  final Orders orders;
+
+  @override
+  State<OrderButton> createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return _isLoading
+        ? Container(
+          width: 20,
+          height: 20,
+          child: const CircularProgressIndicator(
+              strokeWidth: 3.0,
+            ),
+        )
+        : TextButton(
+            onPressed: (widget.cart.totalAmount() == 0 || _isLoading)
+                ? null
+                : () async {
+                    setState(() {
+                      _isLoading = true;
+                    });
+                    try {
+                      await widget.orders.addOrder(
+                          widget.cart.items.values.toList(),
+                          widget.cart.totalAmount());
+                      widget.cart.clear();
+                      setState(() {
+                        _isLoading = false;
+                      });
+                    } catch (error) {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Some error occurred. Try again later.',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
+                      setState(() {
+                        _isLoading = false;
+                      });
+                    }
+                  },
+            child: const Text('ORDER NOW'),
+          );
   }
 }
